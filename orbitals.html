@@ -1,0 +1,254 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orbital Shapes 3D</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #111; color: #e8e8e8; font-family: system-ui, sans-serif; line-height: 1.6; }
+  #viewer { position: sticky; top: 0; height: 55vh; background: #0b0b0b; border-bottom: 1px solid #333; z-index: 2; }
+  #viewer canvas { display: block; }
+  #ui { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+  button { background: #222; color: #eee; border: 1px solid #444; border-radius: 6px; padding: 6px 11px; font-size: 14px; cursor: pointer; }
+  button.on { background: #3b6fd8; border-color: #3b6fd8; }
+  #legend { position: absolute; bottom: 8px; left: 10px; font-size: 13px; color: #aaa; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 8px; }
+  main { max-width: 760px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 24px; margin: 8px 0 4px; }
+  h2 { font-size: 19px; margin: 28px 0 6px; color: #8fb4ff; }
+  .card { background: #1b1b1b; border: 1px solid #333; border-radius: 10px; padding: 14px 16px; margin: 12px 0; }
+  #now { border-color: #3b6fd8; }
+  #now h3 { margin: 0 0 6px; }
+  .big { font-size: 20px; text-align: center; font-family: Georgia, serif; margin: 8px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { border: 1px solid #333; padding: 6px 8px; text-align: left; }
+  th { background: #222; }
+  details { margin: 8px 0; } summary { cursor: pointer; color: #8fb4ff; }
+  .tip { color: #ffd479; }
+  .analogy { background: #1d2418; border-left: 4px solid #7bc96f; border-radius: 6px; padding: 10px 14px; margin: 12px 0; }
+  .analogy::before { content: "💡 Analogy"; display: block; font-weight: bold; color: #9be08e; margin-bottom: 2px; }
+</style>
+</head>
+<body>
+
+<div id="viewer">
+  <div id="ui"></div>
+  <div id="legend"><span class="dot" style="background:#4a90ff"></span>+ phase <span class="dot" style="background:#ff8c3a"></span>− phase · drag to rotate · pinch/scroll to zoom</div>
+</div>
+
+<main>
+  <h1>Orbital shapes: a beginner's guide</h1>
+  <p>Use the buttons in the 3D view above to pick an orbital. The explanation in the blue box changes to match what you are looking at. The rest of this page teaches the ideas from scratch, so read it top to bottom the first time.</p>
+
+  <div class="card" id="now"></div>
+
+  <h2>1. The problem: where is the electron?</h2>
+  <p>Picture an atom as a tiny, heavy nucleus with electrons around it. Old school pictures show electrons circling the nucleus like planets around the Sun. <b>That picture is wrong.</b> Experiments in the early 1900s showed that electrons behave partly like <b>waves</b>, and you can't say exactly where a wave "is". It is spread out.</p>
+  <div class="analogy">Think of a ceiling fan spinning fast. You can't point to where one blade is at any moment. You just see a blurry disc. An electron is even more blurry than that: all we can know is <i>where it is likely to be</i>, not where it is.</div>
+  <p>So scientists needed a new rule to describe electrons. That rule is the Schrödinger equation.</p>
+
+  <h2>2. The Schrödinger equation, in plain words</h2>
+  <p>In 1926 the physicist Erwin Schrödinger wrote an equation for electron waves. The short form looks like this:</p>
+  <div class="big">Ĥ ψ = E ψ</div>
+  <ul>
+    <li><b>ψ</b> (the Greek letter "psi", said "sigh") is the <b>wave function</b>. Think of it as a number attached to every point in space around the nucleus. It describes the electron wave.</li>
+    <li><b>Ĥ</b> ("H-hat") is a recipe that works out the electron's total energy (movement energy + the pull of the nucleus).</li>
+    <li><b>E</b> is the energy of the electron.</li>
+  </ul>
+  <p>The equation says: <i>"Apply the energy recipe to the wave, and you get back the same wave multiplied by a fixed energy."</i> Only certain special waves satisfy this. Those special solutions are the <b>orbitals</b>. This is also why electron energies come in fixed steps (energy levels) instead of any value.</p>
+  <div class="analogy">Pluck a guitar string. It can only vibrate in certain neat patterns, because both ends are held fixed: one big hump, two humps, three humps… never 2½ humps. Each pattern gives a particular note. An electron held by the nucleus is the same: only certain "vibration patterns" (orbitals) fit, and each has its own energy. The Schrödinger equation is simply the rule that finds those allowed patterns.</div>
+  <div class="analogy">A staircase vs a ramp. On a ramp you can stand at any height. On a staircase you can only stand on the steps. Electron energies are a staircase, which is why we talk about energy <i>levels</i>.</div>
+  <p class="tip">You don't need to solve the equation yourself. For school and entrance exams you need to know what its solutions look like, and that is what the 3D models show.</p>
+
+  <h2>3. What is an orbital?</h2>
+  <p>An orbital is a region around the nucleus where an electron is likely to be found. The key rule:</p>
+  <div class="big">probability of finding the electron ∝ ψ²</div>
+  <p>Where ψ² is large, you are likely to find the electron. Where ψ² is zero, you will never find it there.</p>
+  <p>The electron doesn't have a sharp edge, so textbooks draw a <b>boundary surface</b>: a shape that encloses roughly 90% of the chance of finding the electron. The 3D models above are this kind of shape (see section 8 for one simplification).</p>
+  <div class="analogy">Imagine taking a photo of a buzzing bee every second for an hour and stacking all the photos on top of each other. You'd get a cloud of dots, thickest where the bee spends most time (near its flower). An orbital is that dot cloud for an electron. The boundary surface is like drawing a line around the area that contains 90% of the dots.</div>
+  <p>Each orbital can hold at most <b>2 electrons</b>.</p>
+  <div class="analogy">An orbital is like a room with exactly two beds. It can hold 0, 1 or 2 electrons, never 3. The two roommates must also "sleep head-to-toe" (opposite spins).</div>
+
+  <h2>4. The labels: n, l and m (quantum numbers)</h2>
+  <p>Every solution of the Schrödinger equation comes with three whole numbers that act like its address:</p>
+  <div class="analogy">Think of a hotel. <b>n</b> is the <b>floor</b> (higher floor = farther from the ground, more energy). <b>l</b> is the <b>type of room</b> on that floor: single (s), double (p), suite (d). <b>m</b> is the <b>room number</b>, telling you which of the identical rooms of that type you're in, e.g. the three p rooms face the x, y or z direction. (The spin of the electron is like which of the two beds it takes.)</div>
+  <table>
+    <tr><th>Symbol</th><th>Name</th><th>What it tells you</th><th>Allowed values</th></tr>
+    <tr><td><b>n</b></td><td>Principal</td><td>The shell: size and main energy of the orbital</td><td>1, 2, 3, …</td></tr>
+    <tr><td><b>l</b></td><td>Azimuthal</td><td>The <b>shape</b> of the orbital</td><td>0 up to n − 1</td></tr>
+    <tr><td><b>m</b></td><td>Magnetic</td><td>Which way the shape <b>points</b> in space</td><td>−l … 0 … +l</td></tr>
+  </table>
+  <p>Scientists use letters for l:</p>
+  <table>
+    <tr><th>l</th><th>Letter</th><th>Shape</th><th>How many orientations (2l + 1)</th></tr>
+    <tr><td>0</td><td>s</td><td>Sphere</td><td>1</td></tr>
+    <tr><td>1</td><td>p</td><td>Dumbbell (2 lobes)</td><td>3: px, py, pz</td></tr>
+    <tr><td>2</td><td>d</td><td>Four-leaf clover (mostly)</td><td>5: dxy, dxz, dyz, dx²−y², dz²</td></tr>
+  </table>
+  <p>So "2p" means n = 2, l = 1. "3d" means n = 3, l = 2. That is why there is no "1p" (l can't be 1 when n = 1) and no "2d".</p>
+  <div class="analogy">In our hotel, the ground floor (n = 1) is small and only has single rooms (s). Floor 2 adds double rooms (p). Floor 3 adds suites (d). Higher floors are bigger, so they have room for fancier room types.</div>
+
+  <h2>5. How to read the 3D models</h2>
+  <ul>
+    <li><b>Axes:</b> red line = x, green = y, blue = z (z points up).</li>
+    <li><b>Lobes:</b> each blob is a lobe, a region where the electron is likely to be.</li>
+    <li><b>Colours (phase):</b> ψ can be positive or negative. Blue lobes are where ψ is +, orange where ψ is −. This is <b>not</b> electric charge. It's like the crest and trough of a water wave. It matters when atoms bond: same-colour lobes overlapping make a bond, opposite colours cancel.</li>
+    <li><b>Nodes:</b> where two lobes meet at the nucleus, ψ = 0. A flat surface with ψ = 0 is a <b>nodal plane</b>. The electron is never found on a node.</li>
+  </ul>
+  <div class="analogy">Tie one end of a skipping rope to a pole and shake the other end up and down. You'll see parts of the rope go <b>up</b> (like blue, +) and parts go <b>down</b> (like orange, −). Between them are points that <b>never move at all</b>. Those still points are <b>nodes</b>. The rope isn't "positively charged" where it goes up. Up and down are just the two sides of the wave, and that's all the colours mean.</div>
+  <div class="analogy">Why does phase matter for bonding? Two water waves meeting crest-to-crest make a bigger wave (a bond forms). Crest meeting trough cancel out to flat water (no bond). Same with orbital lobes: same colour + same colour = bond.</div>
+
+  <h2>6. Each shape, one by one</h2>
+  <details open><summary><b>s orbital</b> (l = 0)</summary>
+    <p>A sphere. It looks the same from every direction, so it has only one orientation. It has no nodal planes. Every shell has one s orbital: 1s, 2s, 3s…</p>
+    <div class="analogy">Like a ball, or the glow around a street lamp on a foggy night: it spreads out equally in every direction. Turning a ball doesn't change it, which is why there's only one s orbital per shell.</div></details>
+  <details><summary><b>p orbitals</b> (l = 1)</summary>
+    <p>Each p orbital is a dumbbell: two lobes on opposite sides of the nucleus, one + and one −. There are three, one pointing along each axis: <b>px, py, pz</b>. They have equal energy (in a free atom). Each has <b>one nodal plane</b> through the nucleus, e.g. pz's nodal plane is the xy plane. 3 orbitals × 2 electrons = 6 electrons in a p subshell.</p>
+    <div class="analogy">Like a gym dumbbell or a balloon twisted in the middle, with the nucleus sitting at the twist. You can hold the dumbbell left–right (px), front–back (py) or up–down (pz). Three directions in space = three p orbitals. The nodal plane is like a sheet of paper slid through the twist: the electron is never found on that sheet.</div></details>
+  <details><summary><b>d orbitals</b> (l = 2)</summary>
+    <p>There are five d orbitals, each with <b>two nodal surfaces</b>. 5 × 2 = 10 electrons in a d subshell.</p>
+    <ul>
+      <li><b>dxy, dxz, dyz</b>: four lobes lying <i>between</i> the two named axes (e.g. dxy lies in the xy plane, at 45° to the x and y axes).</li>
+      <li><b>dx²−y²</b>: four lobes lying <i>on</i> the x and y axes.</li>
+      <li><b>dz²</b>: the odd one out. Two big lobes along z plus a ring ("donut") around the middle. Its nodes are two cones, not planes.</li>
+    </ul>
+    <div class="analogy">dxy and dx²−y² are like a four-leaf clover lying flat on a table. Place it so the leaves point to the <b>corners</b> of the table: that's dxy. Rotate it 45° so the leaves point to the <b>middle of each edge</b>: that's dx²−y². Same clover, just turned. dz² looks like a <b>dumbbell wearing a ring</b>, or a spinning top with a skirt.</div>
+    <p class="tip">Exam tip: the difference between dxy (between axes) and dx²−y² (on axes) is asked a lot, especially in crystal field theory.</p></details>
+
+  <h2>7. Quick formulas to remember</h2>
+  <table>
+    <tr><th>Quantity</th><th>Formula</th><th>Example: 3d (n=3, l=2)</th></tr>
+    <tr><td>Orbitals in a subshell</td><td>2l + 1</td><td>5</td></tr>
+    <tr><td>Max electrons in a subshell</td><td>2(2l + 1)</td><td>10</td></tr>
+    <tr><td>Angular nodes</td><td>l</td><td>2</td></tr>
+    <tr><td>Radial nodes</td><td>n − l − 1</td><td>0</td></tr>
+    <tr><td>Total nodes</td><td>n − 1</td><td>2</td></tr>
+    <tr><td>Orbitals in shell n</td><td>n²</td><td>9</td></tr>
+  </table>
+
+  <h2>8. What these models leave out</h2>
+  <p>The models show only the <b>angular</b> part of each orbital, which is what gives the shape. Real orbitals also have a <b>radial</b> part that decides how big they are. So:</p>
+  <ul>
+    <li>2p and 3p have the same dumbbell shape; 3p is just bigger.</li>
+    <li>Higher orbitals such as 2s have <b>radial nodes</b>: hidden spherical shells inside where ψ = 0 (2s has one, 3s has two). These are not drawn here.</li>
+  </ul>
+  <div class="analogy">A 1s orbital is like a solid ball of candy floss. A 2s orbital is like an onion with two layers: an inner ball, an empty gap (the radial node), then an outer shell. From outside both look like a round ball, which is what our model shows. The layers are hidden inside.</div>
+
+  <h2>9. Check yourself</h2>
+  <details><summary>How many nodal planes does a pz orbital have, and which plane is it?</summary><p>One: the xy plane.</p></details>
+  <details><summary>Which d orbital has lobes pointing along the x and y axes?</summary><p>dx²−y².</p></details>
+  <details><summary>Why is there no 2d orbital?</summary><p>For n = 2, l can only be 0 or 1 (s or p). d needs l = 2, which needs n ≥ 3.</p></details>
+  <details><summary>Do the blue and orange colours mean positive and negative charge?</summary><p>No. They show the sign (phase) of the wave function ψ. The electron's charge is always negative.</p></details>
+  <details><summary>How many radial nodes does a 3p orbital have?</summary><p>n − l − 1 = 3 − 1 − 1 = 1.</p></details>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+// Angular shapes (real spherical harmonics). x,y,z = unit direction; lobe size = |Y|, colour = sign.
+const orbitals = {
+  "s":      { f: (x,y,z) => 0.6, like: "a ball, or a round glow around a lamp", l: 0,
+    text: "A perfect sphere around the nucleus. The chance of finding the electron depends only on distance, not direction. <b>0 nodal planes.</b> Holds up to 2 electrons." },
+  "px":     { f: (x,y,z) => x, like: "a dumbbell held left–right", l: 1,
+    text: "Two lobes along the <b>x axis</b> (red line), one + and one −. The electron is never found on the <b>yz plane</b> (the nodal plane) that separates the lobes." },
+  "py":     { f: (x,y,z) => y, like: "a dumbbell held front–back", l: 1,
+    text: "Same dumbbell as px, turned to point along the <b>y axis</b> (green line). Nodal plane: <b>xz</b>." },
+  "pz":     { f: (x,y,z) => z, like: "a dumbbell held up–down", l: 1,
+    text: "Same dumbbell, pointing up and down along the <b>z axis</b> (blue line). Nodal plane: <b>xy</b> (the flat 'floor' through the nucleus)." },
+  "dxy":    { f: (x,y,z) => 2*x*y, like: "a four-leaf clover lying flat, leaves pointing to the table's corners", l: 2,
+    text: "Four lobes in the xy plane, lying <b>between</b> the x and y axes (at 45°). Nodal planes: <b>xz and yz</b>. Lobes alternate + − + −." },
+  "dxz":    { f: (x,y,z) => 2*x*z, like: "a four-leaf clover standing upright, facing you", l: 2,
+    text: "Like dxy, but in the <b>xz plane</b>, between the x and z axes. Nodal planes: <b>xy and yz</b>." },
+  "dyz":    { f: (x,y,z) => 2*y*z, like: "a four-leaf clover standing upright, side-on", l: 2,
+    text: "Like dxy, but in the <b>yz plane</b>, between the y and z axes. Nodal planes: <b>xy and xz</b>." },
+  "dx²−y²": { f: (x,y,z) => x*x - y*y, like: "a flat four-leaf clover, leaves pointing to the middle of each table edge", l: 2,
+    text: "Four lobes in the xy plane, lying <b>on</b> the x and y axes. Compare with dxy: same shape, rotated by 45°. The x lobes are + and the y lobes are −." },
+  "dz²":    { f: (x,y,z) => (3*z*z - 1) / 2, like: "a dumbbell wearing a ring around its waist", l: 2,
+    text: "Two big lobes along the z axis plus a <b>donut-shaped ring</b> around the middle (opposite sign). Its nodes are two <b>cones</b>, not flat planes. Still counts as 2 angular nodes." }
+};
+
+const viewer = document.getElementById("viewer");
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+camera.position.set(2.4, 1.7, 2.8);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(devicePixelRatio);
+viewer.prepend(renderer.domElement);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 1.5;
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+const light = new THREE.DirectionalLight(0xffffff, 0.8);
+light.position.set(3, 5, 4);
+scene.add(light);
+
+// Chemistry axes -> screen: x -> X, y -> -Z, z -> Y (up)
+const toScreen = (x, y, z) => new THREE.Vector3(x, z, -y);
+function axis(dir, color, label) {
+  const len = 1.4;
+  const g = new THREE.BufferGeometry().setFromPoints([dir.clone().multiplyScalar(-len), dir.clone().multiplyScalar(len)]);
+  scene.add(new THREE.Line(g, new THREE.LineBasicMaterial({ color })));
+  const c = document.createElement("canvas"); c.width = c.height = 64;
+  const ctx = c.getContext("2d"); ctx.fillStyle = "#" + color.toString(16).padStart(6, "0");
+  ctx.font = "bold 48px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(label, 32, 32);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c) }));
+  s.position.copy(dir.clone().multiplyScalar(len + 0.12)); s.scale.set(0.2, 0.2, 0.2);
+  scene.add(s);
+}
+axis(toScreen(1,0,0), 0xff5555, "x");
+axis(toScreen(0,1,0), 0x55ff55, "y");
+axis(toScreen(0,0,1), 0x5599ff, "z");
+// small nucleus
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(0.03, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffffff })));
+
+let mesh;
+const pos = new THREE.Color(0x4a90ff), neg = new THREE.Color(0xff8c3a);
+const letter = ["s", "p", "d"];
+
+function show(name) {
+  if (mesh) { scene.remove(mesh); mesh.geometry.dispose(); }
+  const o = orbitals[name];
+  const geo = new THREE.SphereGeometry(1, 160, 120);
+  const p = geo.attributes.position, colors = [];
+  for (let i = 0; i < p.count; i++) {
+    const sx = p.getX(i), sy = p.getY(i), sz = p.getZ(i);
+    const v = o.f(sx, -sz, sy);
+    const r = Math.abs(v) * 1.1;
+    p.setXYZ(i, sx * r, sy * r, sz * r);
+    const c = v >= 0 ? pos : neg; colors.push(c.r, c.g, c.b);
+  }
+  geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+  geo.computeVertexNormals();
+  mesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({ vertexColors: true, shininess: 60, side: THREE.DoubleSide, transparent: true, opacity: 0.85 }));
+  scene.add(mesh);
+  document.querySelectorAll("button[data-o]").forEach(b => b.classList.toggle("on", b.dataset.o === name));
+  document.getElementById("now").innerHTML =
+    `<h3>You are looking at: ${name} orbital</h3>
+     <p style="margin:0 0 6px;color:#9be08e">💡 Looks like: ${o.like}</p>
+     <p style="margin:0 0 6px;color:#aaa">Type: ${letter[o.l]} (l = ${o.l}) · angular nodes: ${o.l} · orbitals of this type: ${2*o.l+1}</p>
+     <p style="margin:0">${o.text}</p>`;
+}
+
+const ui = document.getElementById("ui");
+Object.keys(orbitals).forEach(n => {
+  const b = document.createElement("button"); b.textContent = n; b.dataset.o = n;
+  b.onclick = () => show(n); ui.appendChild(b);
+});
+const spin = document.createElement("button"); spin.textContent = "⟳ Spin"; spin.className = "on";
+spin.onclick = () => { controls.autoRotate = !controls.autoRotate; spin.classList.toggle("on"); };
+ui.appendChild(spin);
+
+function resize() {
+  const w = viewer.clientWidth, h = viewer.clientHeight;
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+addEventListener("resize", resize); resize();
+show("pz");
+(function loop() { requestAnimationFrame(loop); controls.update(); renderer.render(scene, camera); })();
+</script>
+</body>
+</html>
