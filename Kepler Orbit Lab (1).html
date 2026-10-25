@@ -1,0 +1,646 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Kepler Orbit Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: observatory console — big viewport left, instrument panel right, plots beneath; one dark deep-space look */
+:root{
+  --bg:#090b12; --panel:#11141f; --panel2:#171b2a; --line:#252a3d; --fg:#e7e9f2; --muted:#8b91aa;
+  --sun:#ffb547; --planet:#5cc8ff; --vel:#ff6f91; --pos:#9b8cff; --good:#6fe0a8;
+  --f-display:"Syne", "Trebuchet MS", sans-serif;
+  --f-body:"IBM Plex Sans", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme:dark;
+}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--f-body);font-size:15px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(26px,5vw,40px);letter-spacing:-.01em;margin:0;line-height:1.05;text-wrap:balance}
+h1 span{color:var(--sun)}
+.sub{color:var(--muted);margin:4px 0 0;max-width:62ch}
+h2{font-family:var(--f-display);font-weight:600;font-size:18px;margin:0}
+h3{font-size:15px;margin:0}
+.tabs{display:flex;gap:4px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--line)}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{font:500 14px var(--f-body);color:var(--muted);background:none;border:0;border-bottom:2px solid transparent;padding:10px 14px;cursor:pointer;margin-bottom:-1px;white-space:nowrap;flex:none}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--sun)}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--planet);outline-offset:2px}
+.grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.view{position:relative;background:radial-gradient(ellipse at center,#121628 0%,var(--bg) 75%);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.view canvas{display:block;width:100%}
+#cv2d{aspect-ratio:1/1;max-width:100%}
+.hud{position:absolute;left:12px;top:10px;font:12px var(--f-mono);color:var(--muted);pointer-events:none}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.ctl{display:flex;flex-direction:column;gap:6px}
+.ctl label{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 8px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.ctl label output{font:500 14px var(--f-mono);color:var(--fg);text-transform:none;letter-spacing:0}
+input[type=range]{width:100%;accent-color:var(--planet)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip,.btn{font:500 13px var(--f-body);color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer}
+.chip:hover,.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--sun);color:#1b1205;border-color:var(--sun);font-weight:600}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+select{font:13px var(--f-body);background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:5px 8px}
+dl.read{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0;font-size:13px}
+dl.read dt{color:var(--muted)}
+dl.read dd{margin:0;font:500 13px var(--f-mono);text-align:right;font-variant-numeric:tabular-nums}
+.badge{display:inline-block;font:600 12px var(--f-body);letter-spacing:.04em;text-transform:uppercase;padding:3px 10px;border-radius:999px;border:1px solid currentColor}
+.plots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+@media (max-width:760px){.plots{grid-template-columns:minmax(0,1fr)}}
+.plot{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 12px 8px;min-width:0}
+.plot header{align-items:center;margin-bottom:6px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font:12px var(--f-mono);color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.plot canvas{display:block;width:100%;height:190px}
+.note{font-size:13px;color:var(--muted);margin:0}
+#v3wrap{height:min(68vh,560px);min-height:340px;touch-action:none;cursor:grab}
+#v3wrap canvas{height:100%}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+th{color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.05em;font-size:11px}
+td{font-family:var(--f-mono)}
+th:first-child,td:first-child{text-align:left}
+.sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;vertical-align:-1px}
+.notes{max-width:760px;display:flex;flex-direction:column;gap:18px}
+.notes p,.notes li{max-width:68ch}
+.notes ol,.notes ul{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
+.eq{font-family:var(--f-mono);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:2px 6px;white-space:nowrap}
+details{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+details summary{cursor:pointer;font-weight:600}
+details .ans{margin-top:10px;color:var(--fg);display:flex;flex-direction:column;gap:6px}
+details .ans p{margin:0}
+.key li::marker{color:var(--sun)}
+[role=tabpanel]{display:flex;flex-direction:column;gap:18px}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Kepler <span>Orbit</span> Lab</h1>
+      <p class="sub">A planet starts 1 AU from the Sun, moving sideways. Change its launch speed and watch the orbit stretch, close up, or break free.</p>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="t-lab" aria-selected="true" data-p="p-lab">2D orbit lab</button>
+    <button role="tab" id="t-3d" aria-selected="false" data-p="p-3d">3D orbit</button>
+    <button role="tab" id="t-sweep" aria-selected="false" data-p="p-sweep">Speed sweep</button>
+    <button role="tab" id="t-notes" aria-selected="false" data-p="p-notes">Notes &amp; questions</button>
+  </nav>
+
+  <!-- 2D LAB -->
+  <section role="tabpanel" id="p-lab">
+    <div class="grid">
+      <div class="view"><canvas id="cv2d"></canvas><div class="hud" id="hud2d"></div></div>
+      <div class="panel">
+        <div class="ctl">
+          <label for="v2">Launch speed <output id="v2out"></output></label>
+          <input type="range" id="v2" min="1.5" max="10" step="0.01" value="5.2">
+          <div class="chips">
+            <button class="chip" data-f="0.7">0.7 v<sub>c</sub></button>
+            <button class="chip" data-f="1">Circular v<sub>c</sub></button>
+            <button class="chip" data-f="1.2">1.2 v<sub>c</sub></button>
+            <button class="chip" data-f="1.41421356">Escape √2 v<sub>c</sub></button>
+            <button class="chip" data-f="1.6">1.6 v<sub>c</sub></button>
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="play2">Pause</button>
+          <button class="btn" id="reset2">Restart</button>
+          <label for="rate2" class="note">Time rate</label>
+          <select id="rate2"><option value="0.25">0.25 yr/s</option><option value="0.5" selected>0.5 yr/s</option><option value="1">1 yr/s</option><option value="2">2 yr/s</option></select>
+        </div>
+        <div><span class="badge" id="type2">—</span></div>
+        <dl class="read" id="read2"></dl>
+        <p class="note">Units: AU and years, so GM<sub>☉</sub> = 4π². Earth's orbital speed, 29.8 km/s, is 2π ≈ 6.28 AU/yr. The dashed circle is Earth's orbit for reference; the faint line is the predicted path.</p>
+      </div>
+    </div>
+    <div class="plots">
+      <div class="plot">
+        <header><h3>Position vs time</h3><div class="legend"><span><i style="background:var(--planet)"></i>x</span><span><i style="background:var(--pos)"></i>y</span><span><i style="background:var(--muted)"></i>r</span></div></header>
+        <canvas id="plotPos"></canvas>
+      </div>
+      <div class="plot">
+        <header><h3>Velocity vs time</h3><div class="legend"><span><i style="background:var(--planet)"></i>vₓ</span><span><i style="background:var(--pos)"></i>v_y</span><span><i style="background:var(--vel)"></i>|v|</span></div></header>
+        <canvas id="plotVel"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3D -->
+  <section role="tabpanel" id="p-3d" hidden>
+    <div class="grid">
+      <div class="view" id="v3wrap"><div class="hud">Drag to rotate · scroll or pinch to zoom</div></div>
+      <div class="panel">
+        <div class="ctl">
+          <label for="v3">Launch speed <output id="v3out"></output></label>
+          <input type="range" id="v3" min="1.5" max="10" step="0.01" value="5.6">
+        </div>
+        <div class="ctl">
+          <label for="inc3">Launch tilt (inclination) <output id="inc3out"></output></label>
+          <input type="range" id="inc3" min="0" max="80" step="1" value="25">
+        </div>
+        <div class="row">
+          <button class="btn primary" id="play3">Pause</button>
+          <button class="btn" id="reset3">Restart</button>
+          <select id="rate3" aria-label="Time rate"><option value="0.25">0.25 yr/s</option><option value="0.5" selected>0.5 yr/s</option><option value="1">1 yr/s</option></select>
+        </div>
+        <div><span class="badge" id="type3">—</span></div>
+        <dl class="read" id="read3"></dl>
+        <p class="note">The grid is the ecliptic plane (Earth's orbit plane). Tilting the launch velocity tilts the whole orbit plane, but the shape still depends only on speed. The pink arrow is velocity; the thin drop-line shows height above the plane.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SWEEP -->
+  <section role="tabpanel" id="p-sweep" hidden>
+    <div class="grid">
+      <div class="view"><canvas id="cvSweep" style="aspect-ratio:4/3"></canvas><div class="hud">Same start point, same start time</div></div>
+      <div class="panel">
+        <h2>How launch speed shapes the path</h2>
+        <p class="note" style="color:var(--fg)">Below circular speed, the launch point becomes the farthest point (aphelion) and the planet dives in toward the Sun. Above it, the launch point is the closest point (perihelion) and the orbit swings out. At √2 v<sub>c</sub> the total energy reaches zero and the orbit opens into a parabola; faster still gives a hyperbola.</p>
+        <p class="note">Notice that the slower inner orbits lap the faster outer ones: bigger orbits take longer, T² = a³.</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="tablewrap"><table id="sweepTable"></table></div>
+    </div>
+  </section>
+
+  <!-- NOTES -->
+  <section role="tabpanel" id="p-notes" hidden>
+    <div class="notes">
+      <div>
+        <h2>1 · The ideas, in order</h2>
+        <ol>
+          <li><b>Gravity is the only force.</b> The Sun pulls the planet with acceleration <span class="eq">a = −GM r̂ / r²</span>. The simulation steps this forward in tiny time steps (velocity-Verlet), smaller near the Sun where things change fast.</li>
+          <li><b>Circular speed.</b> For a circle, gravity supplies exactly the centripetal force: <span class="eq">v²/r = GM/r²</span>, so <span class="eq">v_c = √(GM/r)</span>. At 1 AU that is 2π AU/yr ≈ 29.8 km/s.</li>
+          <li><b>Energy decides the family of orbit.</b> Specific energy <span class="eq">E = v²/2 − GM/r</span>. E &lt; 0 → closed ellipse (bound). E = 0 → parabola, which happens at <span class="eq">v_esc = √(2GM/r) = √2·v_c</span>. E &gt; 0 → hyperbola (escapes).</li>
+          <li><b>Launching sideways fixes the turning point.</b> Because velocity starts perpendicular to the radius, the launch point is either perihelion (v &gt; v_c) or aphelion (v &lt; v_c). The eccentricity is <span class="eq">e = |v²r/GM − 1|</span> and the semi-major axis is <span class="eq">a = r / (2 − v²r/GM)</span>.</li>
+          <li><b>Kepler's laws appear in the graphs.</b> Angular momentum is conserved (<span class="eq">r·v⊥ = constant</span>), so the planet is fastest at perihelion: watch |v| spike in the velocity graph. Period follows <span class="eq">T² = a³</span> (T in years, a in AU).</li>
+        </ol>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <h2>2 · Exam questions</h2>
+        <details>
+          <summary>Q1. A planet at 1 AU is launched perpendicular to the Sun–planet line at 1.2 times circular speed. Find e, a, aphelion distance and period.</summary>
+          <div class="ans">
+            <p>v²r/GM = (1.2)² = 1.44 since v_c² = GM/r.</p>
+            <p>Eccentricity: e = |1.44 − 1| = <b>0.44</b>. Since v &gt; v_c, the launch point is perihelion, r_p = 1 AU.</p>
+            <p>Semi-major axis: a = r/(2 − 1.44) = 1/0.56 = <b>1.79 AU</b>. Check: r_p = a(1 − e) = 1.786 × 0.56 = 1.00 AU ✓</p>
+            <p>Aphelion: r_a = a(1 + e) = 1.786 × 1.44 = <b>2.57 AU</b>.</p>
+            <p>Period (Kepler III, yr–AU units): T = a^{3/2} = 1.786^{1.5} = <b>2.39 years</b>.</p>
+          </div>
+        </details>
+        <details>
+          <summary>Q2. Derive the escape speed from distance r and show it equals √2 times the circular speed. Evaluate it at 1 AU.</summary>
+          <div class="ans">
+            <p>To escape, the planet must reach r → ∞ with v ≥ 0, so total energy must be at least zero: ½mv² − GMm/r ≥ 0.</p>
+            <p>Minimum case: ½v_esc² = GM/r ⇒ <b>v_esc = √(2GM/r)</b>.</p>
+            <p>Circular speed is v_c = √(GM/r), so v_esc/v_c = √2 ⇒ <b>v_esc = √2·v_c</b>.</p>
+            <p>At 1 AU: v_c = 29.8 km/s ⇒ v_esc = 1.414 × 29.8 ≈ <b>42.1 km/s</b> (8.89 AU/yr). The resulting path is a parabola (e = 1).</p>
+          </div>
+        </details>
+        <details>
+          <summary>Q3. For the orbit in Q1, find the planet's speed at aphelion. Which conservation law do you use and why?</summary>
+          <div class="ans">
+            <p>Gravity acts along the line to the Sun, so it exerts no torque about the Sun: <b>angular momentum is conserved</b>.</p>
+            <p>At perihelion and aphelion velocity is perpendicular to r, so m v_p r_p = m v_a r_a.</p>
+            <p>v_p = 1.2 × 29.8 = 35.7 km/s, r_p = 1 AU, r_a = 2.57 AU.</p>
+            <p>v_a = v_p r_p / r_a = 35.7 / 2.57 ≈ <b>13.9 km/s</b>.</p>
+            <p>Energy check: v_a² − v_p² should equal 2GM(1/r_a − 1/r_p); both give the same result, confirming the answer.</p>
+          </div>
+        </details>
+        <details>
+          <summary>Q4. In the simulation, x(t) is a smooth sine wave for a circular orbit but becomes lopsided with sharp velocity spikes for an eccentric orbit. Explain.</summary>
+          <div class="ans">
+            <p>Circular orbit: speed and angular speed ω are constant, so x = r cos(ωt), y = r sin(ωt) — pure sinusoids, and |v| is a flat line.</p>
+            <p>Elliptical orbit: by Kepler's second law (equal areas in equal times, from conservation of angular momentum) the planet sweeps quickly past perihelion and crawls near aphelion.</p>
+            <p>So x(t) spends a long time near the aphelion value (broad, flat extreme) and swings rapidly through perihelion (narrow, sharp extreme).</p>
+            <p>|v| peaks sharply at perihelion and has a broad minimum at aphelion; vₓ and v_y flip sign quickly at perihelion, producing spikes.</p>
+          </div>
+        </details>
+        <details>
+          <summary>Q5. A planet at 1 AU has speed 7.0 AU/yr. Is it bound? State the orbit type with a calculation.</summary>
+          <div class="ans">
+            <p>GM = 4π² ≈ 39.48 AU³/yr². E = v²/2 − GM/r = 49/2 − 39.48 = 24.5 − 39.48 = <b>−14.98 AU²/yr²</b>.</p>
+            <p>E &lt; 0, so the planet is <b>bound</b> and moves on an <b>ellipse</b>.</p>
+            <p>Also v_c = 6.28 &lt; 7.0 &lt; v_esc = 8.89 AU/yr, so the launch point is perihelion; e = 49/39.48 − 1 ≈ 0.24.</p>
+          </div>
+        </details>
+      </div>
+
+      <div>
+        <h2>3 · Key points to remember</h2>
+        <ul class="key">
+          <li>v_c = √(GM/r); at 1 AU, 29.8 km/s = 2π AU/yr.</li>
+          <li>v_esc = √2·v_c ≈ 42.1 km/s at 1 AU.</li>
+          <li>v &lt; v_c → launch point is aphelion; v_c &lt; v &lt; v_esc → launch point is perihelion.</li>
+          <li>E &lt; 0 ellipse, E = 0 parabola, E &gt; 0 hyperbola.</li>
+          <li>Sideways launch: e = |v²r/GM − 1|, a = r/(2 − v²r/GM).</li>
+          <li>Angular momentum conserved → fastest at perihelion (Kepler II).</li>
+          <li>T² = a³ in years and AU (Kepler III); bigger orbits are slower.</li>
+          <li>Tilting the launch velocity tilts the orbit plane but not its shape.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+const MU = 4 * Math.PI * Math.PI;   // GM_sun in AU^3/yr^2
+const VC = Math.sqrt(MU);            // circular speed at 1 AU = 2π
+const KMS = 4.7405;                  // 1 AU/yr in km/s
+const RSUN = 0.00465;
+const css = getComputedStyle(document.documentElement);
+const C = n => css.getPropertyValue(n).trim();
+const COL = {bg:C('--bg'),line:C('--line'),fg:C('--fg'),muted:C('--muted'),sun:C('--sun'),planet:C('--planet'),vel:C('--vel'),pos:C('--pos'),good:C('--good')};
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- physics ---------- */
+function mk(v, incDeg = 0) {
+  const i = incDeg * Math.PI / 180;
+  const s = {x:1,y:0,z:0,vx:0,vy:v*Math.cos(i),vz:v*Math.sin(i),t:0,ax:0,ay:0,az:0,hit:false,adapt:true,lx:1,ly:0,lz:0};
+  acc(s); return s;
+}
+function acc(s){ const r2=s.x*s.x+s.y*s.y+s.z*s.z, r=Math.sqrt(r2), f=-MU/(r2*r); s.ax=f*s.x; s.ay=f*s.y; s.az=f*s.z; }
+// advance to tEnd with adaptive velocity-Verlet; onSample called every `ds` years
+function advance(s, tEnd, ds, onSample){
+  let guard = 0;
+  while (s.t < tEnd && !s.hit && guard++ < 200000) {
+    const r = Math.hypot(s.x,s.y,s.z);
+    let h = Math.min(0.01, 0.0015 * r * Math.sqrt(r));
+    if (ds && h > ds) h = ds;
+    if (s.t + h > tEnd) h = tEnd - s.t;
+    if (h <= 1e-12) break;
+    s.vx += .5*h*s.ax; s.vy += .5*h*s.ay; s.vz += .5*h*s.az;
+    s.x += h*s.vx; s.y += h*s.vy; s.z += h*s.vz;
+    acc(s);
+    s.vx += .5*h*s.ax; s.vy += .5*h*s.ay; s.vz += .5*h*s.az;
+    s.t += h;
+    if (Math.hypot(s.x,s.y,s.z) < RSUN) s.hit = true;
+    if (onSample) {
+      const due = s.t >= s.next;
+      const moved = s.adapt && Math.hypot(s.x-s.lx, s.y-s.ly, s.z-s.lz) > 0.04*Math.hypot(s.x,s.y,s.z);
+      if (due || moved) { onSample(s); if (due) s.next += ds; s.lx=s.x; s.ly=s.y; s.lz=s.z; }
+    }
+  }
+}
+function info(s){
+  const r = Math.hypot(s.x,s.y,s.z), v2 = s.vx*s.vx+s.vy*s.vy+s.vz*s.vz, v = Math.sqrt(v2);
+  const E = v2/2 - MU/r, rv = s.x*s.vx+s.y*s.vy+s.z*s.vz, k = v2 - MU/r;
+  const ex=(k*s.x-rv*s.vx)/MU, ey=(k*s.y-rv*s.vy)/MU, ez=(k*s.z-rv*s.vz)/MU;
+  const e = Math.hypot(ex,ey,ez);
+  const para = Math.abs(e-1) < 0.01;
+  const a = (E < 0 && !para) ? -MU/(2*E) : Infinity;
+  const T = isFinite(a) ? Math.pow(a,1.5) : Infinity;
+  const hx=s.y*s.vz-s.z*s.vy, hy=s.z*s.vx-s.x*s.vz, hz=s.x*s.vy-s.y*s.vx;
+  const inc = Math.acos(hz/Math.hypot(hx,hy,hz))*180/Math.PI;
+  let type, col;
+  if (e < 0.01) { type='Circular'; col=COL.good; }
+  else if (Math.abs(e-1) < 0.01) { type='Parabolic · escapes'; col=COL.vel; }
+  else if (e < 1) { type='Ellipse · bound'; col=COL.planet; }
+  else { type='Hyperbola · escapes'; col=COL.vel; }
+  return {r,v,E,e,a,T,inc,type,col,rp: (h=>h*h/(MU*(1+e)))(Math.hypot(hx,hy,hz)), ra: isFinite(a)? a*(1+e) : Infinity};
+}
+const f2 = (x,d=2) => isFinite(x) ? x.toFixed(d) : '∞';
+function readout(el, s, I, extra=''){
+  el.innerHTML = `
+    <dt>Time</dt><dd>${s.t.toFixed(2)} yr</dd>
+    <dt>Distance r</dt><dd>${I.r.toFixed(3)} AU</dd>
+    <dt>Speed |v|</dt><dd>${I.v.toFixed(2)} AU/yr · ${(I.v*KMS).toFixed(1)} km/s</dd>
+    <dt>Energy E</dt><dd>${(Math.abs(I.E)<0.005?0:I.E).toFixed(2)} AU²/yr²</dd>
+    <dt>Eccentricity e</dt><dd>${I.e.toFixed(3)}</dd>
+    <dt>Semi-major axis a</dt><dd>${f2(I.a)} AU</dd>
+    <dt>Perihelion · aphelion</dt><dd>${I.rp!=null?I.rp.toFixed(2):'—'} · ${f2(I.ra)} AU</dd>
+    <dt>Period T</dt><dd>${f2(I.T)} yr</dd>${extra}`;
+}
+function badge(el, I, s){
+  el.textContent = s.hit ? 'Fell into the Sun' : I.type;
+  el.style.color = s.hit ? COL.sun : I.col;
+}
+function fitCanvas(cv, cssH){
+  const dpr = Math.min(devicePixelRatio||1, 2);
+  const w = cv.clientWidth, h = cssH || cv.clientHeight;
+  if (cv.width !== Math.round(w*dpr) || cv.height !== Math.round(h*dpr)) { cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr); }
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx,w,h};
+}
+function predictPath(v, inc=0){
+  const s = mk(v, inc); s.next = 0; const I = info(s);
+  const pts = []; const tMax = isFinite(I.T) ? Math.min(I.T*1.001, 60) : 6;
+  const ds = Math.max(0.002, tMax/1500);
+  advance(s, tMax, ds, q => { pts.push([q.x,q.y,q.z]); if (Math.hypot(q.x,q.y,q.z) > 40) q.t = tMax; });
+  return {pts, I};
+}
+function bbox(pts, lim=5){
+  let x0=0,x1=0,y0=0,y1=0,z0=0,z1=0; // always include the Sun
+  for (const p of pts){ if (Math.hypot(p[0],p[1],p[2]||0) > lim) continue;
+    x0=Math.min(x0,p[0]); x1=Math.max(x1,p[0]); y0=Math.min(y0,p[1]); y1=Math.max(y1,p[1]); z0=Math.min(z0,p[2]||0); z1=Math.max(z1,p[2]||0); }
+  return {cx:(x0+x1)/2, cy:(y0+y1)/2, cz:(z0+z1)/2, half:Math.max(x1-x0,y1-y0,z1-z0)/2};
+}
+function sunGlow(ctx, x, y, R){
+  const g = ctx.createRadialGradient(x,y,0,x,y,R);
+  g.addColorStop(0,'#fff6dc'); g.addColorStop(.18,COL.sun); g.addColorStop(.45,'rgba(255,150,40,.22)'); g.addColorStop(1,'rgba(255,150,40,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x,y,R,0,7); ctx.fill();
+}
+
+/* ---------- tabs ---------- */
+let active = 'p-lab';
+document.querySelectorAll('[role=tab]').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('[role=tab]').forEach(x => x.setAttribute('aria-selected', x===b));
+  document.querySelectorAll('[role=tabpanel]').forEach(p => p.hidden = p.id !== b.dataset.p);
+  active = b.dataset.p;
+  if (active === 'p-3d') init3D();
+  if (active === 'p-sweep') buildSweep();
+}));
+
+/* ---------- 2D lab ---------- */
+const cv2 = document.getElementById('cv2d'), v2 = document.getElementById('v2');
+const v2out = document.getElementById('v2out'), read2 = document.getElementById('read2'), type2 = document.getElementById('type2');
+const hud2 = document.getElementById('hud2d');
+let S2, hist, ghost, view2, cen2 = {cx:0,cy:0}, running2 = !reduce, info2;
+const DS = 0.002, HMAX = 6000; // sample every 0.002 yr, keep last 4 yr
+function reset2(){
+  const v = +v2.value;
+  S2 = mk(v); S2.next = 0; hist = [];
+  const P = predictPath(v); ghost = P.pts; info2 = P.I;
+  // choose view radius to fit the orbit
+  const B = bbox(ghost, 12); cen2 = B; view2 = Math.max(0.6, B.half*1.12);
+  v2out.textContent = `${v.toFixed(2)} AU/yr · ${(v*KMS).toFixed(1)} km/s · ${(v/VC).toFixed(2)} v_c`;
+}
+v2.addEventListener('input', reset2);
+document.querySelectorAll('#p-lab .chip').forEach(c => c.addEventListener('click', () => { v2.value = (VC * +c.dataset.f).toFixed(2); reset2(); }));
+document.getElementById('reset2').onclick = reset2;
+const play2 = document.getElementById('play2');
+play2.onclick = () => { running2 = !running2; play2.textContent = running2 ? 'Pause' : 'Play'; };
+play2.textContent = running2 ? 'Pause' : 'Play';
+const rate2 = document.getElementById('rate2');
+
+function draw2D(){
+  const {ctx,w,h} = fitCanvas(cv2, cv2.clientWidth);
+  ctx.clearRect(0,0,w,h);
+  // center: shift so ellipse fills view (orbit spans from +rp side to -ra side)
+  const sc = (Math.min(w,h)/2) / view2;
+  const X = x => w/2 + (x - cen2.cx)*sc, Y = y => h/2 - (y - cen2.cy)*sc;
+  // grid rings
+  ctx.lineWidth = 1; ctx.strokeStyle = COL.line; ctx.fillStyle = COL.muted; ctx.font = '11px "IBM Plex Mono", monospace';
+  const step = view2 > 6 ? 2 : view2 > 3 ? 1 : view2 > 1.2 ? 0.5 : 0.25;
+  for (let r = step; r < view2*2; r += step) { ctx.beginPath(); ctx.arc(X(0),Y(0),r*sc,0,7); ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(0,Y(0)); ctx.lineTo(w,Y(0)); ctx.moveTo(X(0),0); ctx.lineTo(X(0),h); ctx.stroke();
+  // Earth ref
+  ctx.setLineDash([4,5]); ctx.strokeStyle = 'rgba(111,224,168,.45)'; ctx.beginPath(); ctx.arc(X(0),Y(0),sc,0,7); ctx.stroke(); ctx.setLineDash([]);
+  // ghost path
+  ctx.strokeStyle = 'rgba(92,200,255,.22)'; ctx.lineWidth = 1.5; ctx.beginPath();
+  ghost.forEach((p,i) => i ? ctx.lineTo(X(p[0]),Y(p[1])) : ctx.moveTo(X(p[0]),Y(p[1]))); ctx.stroke();
+  // sun
+  sunGlow(ctx, X(0), Y(0), Math.min(18, Math.max(10, 0.06*sc)));
+  // trail (fading)
+  const n = hist.length, CH = 20, per = Math.ceil(n/CH);
+  ctx.lineWidth = 2; ctx.lineJoin = 'round';
+  for (let c = 0; c < CH; c++) {
+    const i0 = c*per, i1 = Math.min(n-1, (c+1)*per); if (i1 <= i0) continue;
+    ctx.strokeStyle = `rgba(92,200,255,${0.1 + 0.9*(c+1)/CH})`; ctx.beginPath();
+    ctx.moveTo(X(hist[i0].x),Y(hist[i0].y)); for (let i = i0+1; i <= i1; i++) ctx.lineTo(X(hist[i].x),Y(hist[i].y));
+    ctx.stroke();
+  }
+  // position vector
+  const px = X(S2.x), py = Y(S2.y);
+  ctx.strokeStyle = 'rgba(155,140,255,.6)'; ctx.lineWidth = 1; ctx.setLineDash([2,4]);
+  ctx.beginPath(); ctx.moveTo(X(0),Y(0)); ctx.lineTo(px,py); ctx.stroke(); ctx.setLineDash([]);
+  // velocity arrow
+  const k = (view2*0.35)/Math.max(VC, 1) ; // AU of arrow per AU/yr
+  arrow(ctx, px, py, px + S2.vx*k*sc, py - S2.vy*k*sc, COL.vel);
+  // planet
+  ctx.fillStyle = COL.planet; ctx.shadowColor = COL.planet; ctx.shadowBlur = 12;
+  ctx.beginPath(); ctx.arc(px,py,6,0,7); ctx.fill(); ctx.shadowBlur = 0;
+  hud2.textContent = `view ±${view2.toFixed(1)} AU · rings every ${step} AU`;
+}
+function arrow(ctx,x1,y1,x2,y2,col){
+  const a = Math.atan2(y2-y1,x2-x1), L = Math.hypot(x2-x1,y2-y1); if (L < 2) return;
+  ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2-8*Math.cos(a),y2-8*Math.sin(a)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x2,y2); ctx.lineTo(x2-11*Math.cos(a-.4),y2-11*Math.sin(a-.4)); ctx.lineTo(x2-11*Math.cos(a+.4),y2-11*Math.sin(a+.4)); ctx.fill();
+}
+function nice(range){ const p = Math.pow(10, Math.floor(Math.log10(range))); const f = range/p; return (f<1.5?1:f<3?2:f<7?5:10)*p; }
+function plot(cv, keys, cols, unit){
+  const {ctx,w,h} = fitCanvas(cv, 190);
+  ctx.clearRect(0,0,w,h);
+  const L=46,R=10,T=8,B=24, W=w-L-R, H=h-T-B;
+  if (hist.length < 2) return;
+  const t0 = hist[0].t, t1 = Math.max(hist[hist.length-1].t, t0 + 0.5);
+  let lo=Infinity, hi=-Infinity;
+  for (const p of hist) for (const k of keys) { lo = Math.min(lo,p[k]); hi = Math.max(hi,p[k]); }
+  if (hi-lo < 1e-6) { hi += 1; lo -= 1; }
+  const pad = (hi-lo)*0.08; lo -= pad; hi += pad;
+  const X = t => L + (t-t0)/(t1-t0)*W, Y = v => T + (hi-v)/(hi-lo)*H;
+  ctx.font = '11px "IBM Plex Mono", monospace'; ctx.fillStyle = COL.muted; ctx.strokeStyle = COL.line; ctx.lineWidth = 1;
+  const sy = nice((hi-lo)/4);
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  for (let v = Math.ceil(lo/sy)*sy; v <= hi; v += sy) { const y = Y(v); ctx.beginPath(); ctx.moveTo(L,y); ctx.lineTo(w-R,y); ctx.stroke(); ctx.fillText(+v.toFixed(3), L-6, y); }
+  const sx = nice((t1-t0)/4);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for (let t = Math.ceil(t0/sx)*sx; t <= t1; t += sx) { ctx.fillText(+t.toFixed(2)+' yr', X(t), h-B+6); }
+  if (lo < 0 && hi > 0) { ctx.strokeStyle = COL.muted; ctx.globalAlpha=.5; ctx.beginPath(); ctx.moveTo(L,Y(0)); ctx.lineTo(w-R,Y(0)); ctx.stroke(); ctx.globalAlpha=1; }
+  ctx.save(); ctx.translate(11, T+H/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(unit,0,0); ctx.restore();
+  keys.forEach((k,j) => {
+    ctx.strokeStyle = cols[j]; ctx.lineWidth = 1.8; ctx.beginPath();
+    hist.forEach((p,i) => i ? ctx.lineTo(X(p.t),Y(p[k])) : ctx.moveTo(X(p.t),Y(p[k])));
+    ctx.stroke();
+    const last = hist[hist.length-1]; ctx.fillStyle = cols[j]; ctx.beginPath(); ctx.arc(X(last.t),Y(last[k]),3,0,7); ctx.fill();
+  });
+}
+const plotPos = document.getElementById('plotPos'), plotVel = document.getElementById('plotVel');
+function sample2(s){
+  hist.push({t:s.t,x:s.x,y:s.y,r:Math.hypot(s.x,s.y),vx:s.vx,vy:s.vy,v:Math.hypot(s.vx,s.vy)});
+  while (hist.length > 2 && (hist[0].t < s.t - 4 || hist.length > HMAX)) hist.shift();
+}
+function tick2(dt){
+  const I = info(S2);
+  const far = Math.hypot(S2.x-cen2.cx, S2.y-cen2.cy) > view2*2.2;
+  if (running2 && !S2.hit && !far) advance(S2, S2.t + dt*(+rate2.value), DS, sample2);
+  draw2D();
+  plot(plotPos, ['x','y','r'], [COL.planet, COL.pos, COL.muted], 'AU');
+  plot(plotVel, ['vx','vy','v'], [COL.planet, COL.pos, COL.vel], 'AU/yr');
+  const I2 = info(S2); readout(read2, S2, I2); badge(type2, I2, S2);
+  if (far) { type2.textContent = 'Escaped the view — restart'; }
+}
+
+/* ---------- speed sweep ---------- */
+const SWEEP = [0.6, 0.8, 1.0, 1.15, 1.3, 1.41421356, 1.6];
+const SCOL = ['#ff9e5e','#ffd166','#6fe0a8','#5cc8ff','#9b8cff','#ff6f91','#e2e4ee'];
+let sweep = null, sweepT = 0;
+function buildSweep(){
+  if (sweep) return;
+  sweep = SWEEP.map((f,i) => {
+    const v = f*VC, s = mk(v); s.next = 0; s.adapt = false; const I = info(s);
+    const tMax = isFinite(I.T) ? I.T : 4, pts = [];
+    advance(s, tMax, 0.004, q => pts.push([q.x,q.y]));
+    return {f, v, I, pts, col:SCOL[i], loop:isFinite(I.T)};
+  });
+  const tb = document.getElementById('sweepTable');
+  tb.innerHTML = `<tr><th>Launch speed</th><th>AU/yr</th><th>km/s</th><th>Energy</th><th>e</th><th>a (AU)</th><th>Period</th><th>Path</th></tr>` +
+    sweep.map(o => `<tr><td><span class="sw" style="background:${o.col}"></span>${o.f===1.41421356?'√2':o.f} v<sub>c</sub></td><td>${o.v.toFixed(2)}</td><td>${(o.v*KMS).toFixed(1)}</td><td>${(Math.abs(o.I.E)<0.05?0:o.I.E).toFixed(1)}</td><td>${o.I.e.toFixed(2)}</td><td>${f2(o.I.a)}</td><td>${isFinite(o.I.T)?o.I.T.toFixed(2)+' yr':'—'}</td><td style="font-family:var(--f-body)">${o.I.type.split(' · ')[0]}</td></tr>`).join('');
+}
+function drawSweep(dt){
+  const cv = document.getElementById('cvSweep');
+  const {ctx,w,h} = fitCanvas(cv, cv.clientWidth*0.75);
+  ctx.clearRect(0,0,w,h);
+  if (!reduce) sweepT += dt*0.5;
+  const xmin=-5.8, xmax=1.8, sc = w/(xmax-xmin);
+  const X = x => (x-xmin)*sc, Y = y => h/2 - y*sc;
+  ctx.strokeStyle = COL.line; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0,Y(0)); ctx.lineTo(w,Y(0)); ctx.stroke();
+  ctx.fillStyle = COL.muted; ctx.font = '11px "IBM Plex Mono", monospace'; ctx.textAlign='center'; ctx.textBaseline='top';
+  for (let x=-5; x<=1; x++){ if (x===0||x===1) continue; ctx.beginPath(); ctx.moveTo(X(x),Y(0)-4); ctx.lineTo(X(x),Y(0)+4); ctx.stroke(); ctx.fillText(x+' AU', X(x), Y(0)+8); }
+  sunGlow(ctx, X(0), Y(0), 16);
+  for (const o of sweep) {
+    ctx.strokeStyle = o.col; ctx.globalAlpha = .75; ctx.lineWidth = 1.6; ctx.beginPath();
+    o.pts.forEach((p,i) => i ? ctx.lineTo(X(p[0]),Y(p[1])) : ctx.moveTo(X(p[0]),Y(p[1]))); ctx.stroke(); ctx.globalAlpha = 1;
+    let idx = Math.floor(sweepT/0.004);
+    idx = o.loop ? idx % o.pts.length : Math.min(idx, o.pts.length-1);
+    const p = o.pts[idx]; if (!p) continue;
+    ctx.fillStyle = o.col; ctx.beginPath(); ctx.arc(X(p[0]),Y(p[1]),5,0,7); ctx.fill();
+  }
+  ctx.fillStyle = COL.fg; ctx.textAlign='left'; ctx.textBaseline='top';
+  ctx.fillText(`t = ${sweepT.toFixed(2)} yr`, 12, h-22);
+  ctx.beginPath(); ctx.fillStyle = COL.fg; ctx.arc(X(1),Y(0),3,0,7); ctx.fill();
+  ctx.textAlign='right'; ctx.textBaseline='top'; ctx.fillStyle=COL.muted; ctx.fillText('launch · 1 AU', X(1)+4, Y(0)+22);
+}
+
+/* ---------- 3D ---------- */
+let three = null, S3, running3 = !reduce;
+const v3 = document.getElementById('v3'), inc3 = document.getElementById('inc3');
+const read3 = document.getElementById('read3'), type3 = document.getElementById('type3');
+function init3D(){
+  if (three || !window.THREE) { if (!window.THREE) document.getElementById('v3wrap').insertAdjacentHTML('beforeend','<p class="note" style="padding:60px 16px;text-align:center">3D engine failed to load. Check your connection and reload.</p>'); return; }
+  const wrap = document.getElementById('v3wrap');
+  const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  wrap.appendChild(renderer.domElement);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 500);
+  // stars
+  const sg = new THREE.BufferGeometry(), sp = new Float32Array(1500*3);
+  for (let i=0;i<1500;i++){ const u=Math.random()*2-1, th=Math.random()*6.283, R=120; const q=Math.sqrt(1-u*u); sp.set([R*q*Math.cos(th),R*u,R*q*Math.sin(th)], i*3); }
+  sg.setAttribute('position', new THREE.BufferAttribute(sp,3));
+  scene.add(new THREE.Points(sg, new THREE.PointsMaterial({color:0x8b91aa,size:0.5,sizeAttenuation:true})));
+  // ecliptic grid + Earth ring
+  // grid from short segments (long lines through the camera get clipped away on some GPUs)
+  const gp = [], gcFar = [], N = 8;
+  for (let k = -N; k <= N; k++) for (let j = -N; j < N; j++) {
+    gp.push(k,0,j, k,0,j+1,  j,0,k, j+1,0,k);
+  }
+  const gGeo = new THREE.BufferGeometry(); gGeo.setAttribute('position', new THREE.Float32BufferAttribute(gp,3));
+  const grid = new THREE.LineSegments(gGeo, new THREE.LineBasicMaterial({color:0x4a5480, transparent:true, opacity:.45}));
+  grid.frustumCulled = false; scene.add(grid);
+  const ring = []; for (let i=0;i<=128;i++){ const a=i/128*6.2832; ring.push(new THREE.Vector3(Math.cos(a),0,-Math.sin(a))); }
+  const earthRing = new THREE.Line(new THREE.BufferGeometry().setFromPoints(ring), new THREE.LineDashedMaterial({color:0x6fe0a8,dashSize:.06,gapSize:.06,transparent:true,opacity:.5}));
+  earthRing.computeLineDistances(); scene.add(earthRing);
+  // sun
+  scene.add(new THREE.Mesh(new THREE.SphereGeometry(0.06,32,16), new THREE.MeshBasicMaterial({color:0xffd27a})));
+  const gc = document.createElement('canvas'); gc.width = gc.height = 128; const g = gc.getContext('2d');
+  const rg = g.createRadialGradient(64,64,0,64,64,64); rg.addColorStop(0,'rgba(255,230,170,1)'); rg.addColorStop(.25,'rgba(255,170,60,.6)'); rg.addColorStop(1,'rgba(255,140,30,0)');
+  g.fillStyle = rg; g.fillRect(0,0,128,128);
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(gc), blending:THREE.AdditiveBlending, depthWrite:false}));
+  glow.scale.set(0.42,0.42,1); scene.add(glow);
+  // planet
+  const planet = new THREE.Mesh(new THREE.SphereGeometry(0.045,24,12), new THREE.MeshBasicMaterial({color:0x5cc8ff}));
+  scene.add(planet);
+  const pg = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(gc), color:0x5cc8ff, blending:THREE.AdditiveBlending, depthWrite:false}));
+  pg.scale.set(.16,.16,1); planet.add(pg);
+  // trail, ghost, drop line, velocity arrow
+  const NT = 3000, tArr = new Float32Array(NT*3), tGeo = new THREE.BufferGeometry();
+  tGeo.setAttribute('position', new THREE.BufferAttribute(tArr,3)); tGeo.setDrawRange(0,0);
+  const trailLine = new THREE.Line(tGeo, new THREE.LineBasicMaterial({color:0x5cc8ff})); trailLine.frustumCulled = false; scene.add(trailLine);
+  const ghostLine = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({color:0x5cc8ff,transparent:true,opacity:.22}));
+  scene.add(ghostLine);
+  const dropGeo = new THREE.BufferGeometry(); dropGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6),3));
+  const dropLine = new THREE.Line(dropGeo, new THREE.LineBasicMaterial({color:0x9b8cff,transparent:true,opacity:.7})); dropLine.frustumCulled = false; scene.add(dropLine);
+  const arrowH = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(), 1, 0xff6f91, .1, .06); scene.add(arrowH);
+
+  const T3 = (x,y,z) => [x, z, -y]; // physics (x,y,z) → three (x, up, -y)
+  let tn = 0, viewR = 3, tgt = new THREE.Vector3();
+  const cam = {th:0.9, ph:1.05, d:4};
+  function reset3(){
+    const v = +v3.value, inc = +inc3.value;
+    S3 = mk(v, inc); S3.next = 0; tn = 0; tGeo.setDrawRange(0,0);
+    const P = predictPath(v, inc);
+    ghostLine.geometry.dispose();
+    ghostLine.geometry = new THREE.BufferGeometry().setFromPoints(P.pts.map(p => new THREE.Vector3(...T3(...p))));
+    const B = bbox(P.pts, 10);
+    viewR = Math.max(0.8, B.half); tgt.set(...T3(B.cx, B.cy, B.cz));
+    cam.d = viewR*3.0;
+    v3out.textContent = `${v.toFixed(2)} AU/yr · ${(v/VC).toFixed(2)} v_c`;
+    inc3out.textContent = `${inc}°`;
+  }
+  const v3out = document.getElementById('v3out'), inc3out = document.getElementById('inc3out');
+  v3.addEventListener('input', reset3); inc3.addEventListener('input', reset3);
+  document.getElementById('reset3').onclick = reset3;
+  const play3 = document.getElementById('play3');
+  play3.textContent = running3 ? 'Pause' : 'Play';
+  play3.onclick = () => { running3 = !running3; play3.textContent = running3 ? 'Pause' : 'Play'; };
+
+  // camera controls
+  const ptrs = new Map(); let pinch0 = 0, d0 = 0;
+  const el = renderer.domElement;
+  el.addEventListener('pointerdown', e => { el.setPointerCapture(e.pointerId); ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY}); wrap.style.cursor='grabbing';
+    if (ptrs.size===2){ const [a,b]=[...ptrs.values()]; pinch0=Math.hypot(a.x-b.x,a.y-b.y); d0=cam.d; } });
+  el.addEventListener('pointermove', e => { const p = ptrs.get(e.pointerId); if (!p) return;
+    if (ptrs.size===1){ cam.th -= (e.clientX-p.x)*0.008; cam.ph = Math.min(3.0, Math.max(0.12, cam.ph - (e.clientY-p.y)*0.008)); }
+    p.x=e.clientX; p.y=e.clientY;
+    if (ptrs.size===2){ const [a,b]=[...ptrs.values()]; const d=Math.hypot(a.x-b.x,a.y-b.y); if (pinch0) cam.d = Math.min(60,Math.max(1,d0*pinch0/d)); } });
+  const up = e => { ptrs.delete(e.pointerId); wrap.style.cursor='grab'; };
+  el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+  el.addEventListener('wheel', e => { e.preventDefault(); cam.d = Math.min(60, Math.max(1, cam.d*Math.exp(e.deltaY*0.001))); }, {passive:false});
+
+  function size(){ const w = wrap.clientWidth, h = wrap.clientHeight; renderer.setSize(w,h,false); el.style.width='100%'; el.style.height='100%'; camera.aspect = w/h; camera.updateProjectionMatrix(); }
+  new ResizeObserver(size).observe(wrap); size();
+
+  function push(s){
+    if (tn >= NT) { tArr.copyWithin(0, 3); tn = NT-1; }
+    tArr.set(T3(s.x,s.y,s.z), tn*3); tn++;
+  }
+  three = {
+    tick(dt){
+      const I = info(S3), far = I.r > viewR*4 + 2;
+      if (running3 && !S3.hit && !far) advance(S3, S3.t + dt*(+document.getElementById('rate3').value), 0.003, push);
+      tGeo.setDrawRange(0, tn); tGeo.attributes.position.needsUpdate = true;
+      const [px,py,pz] = T3(S3.x,S3.y,S3.z);
+      planet.position.set(px,py,pz);
+      const dp = dropGeo.attributes.position; dp.setXYZ(0,px,py,pz); dp.setXYZ(1,px,0,pz); dp.needsUpdate = true;
+      const vv = new THREE.Vector3(...T3(S3.vx,S3.vy,S3.vz)); const vl = vv.length();
+      arrowH.position.set(px,py,pz); arrowH.setDirection(vv.normalize());
+      const len = Math.max(0.06, vl * viewR*0.045); arrowH.setLength(len, Math.min(viewR*0.06, len*.3), Math.min(viewR*0.035, len*.18));
+      const d = cam.d * Math.pow(Math.max(1, 1/camera.aspect), 0.85);
+      camera.position.set(tgt.x + d*Math.sin(cam.ph)*Math.cos(cam.th), tgt.y + d*Math.cos(cam.ph), tgt.z + d*Math.sin(cam.ph)*Math.sin(cam.th));
+      camera.lookAt(tgt);
+      renderer.render(scene, camera);
+      const I2 = info(S3); readout(read3, S3, I2, `<dt>Orbit inclination</dt><dd>${I2.inc.toFixed(1)}°</dd><dt>Height above plane</dt><dd>${S3.z.toFixed(3)} AU</dd>`);
+      badge(type3, I2, S3); if (far) type3.textContent = 'Escaped the view — restart';
+    }
+  };
+  reset3();
+}
+
+/* ---------- loop ---------- */
+reset2();
+let last = performance.now();
+function loop(now){
+  const dt = Math.min(0.05, (now-last)/1000); last = now;
+  if (active === 'p-lab') tick2(dt);
+  else if (active === 'p-3d' && three) three.tick(dt);
+  else if (active === 'p-sweep' && sweep) drawSweep(dt);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+})();
+</script>
+
+</body></html>
