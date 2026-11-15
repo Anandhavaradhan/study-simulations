@@ -1,0 +1,38 @@
+{
+  "name": "studysimulations",
+  "productName": "Study Simulations",
+  "version": "1.0.0",
+  "description": "Interactive study simulations for biology, physics and chemistry",
+  "author": "Anandhavaradhan",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "copy-web": "node copy-web.js",
+    "start": "npm run copy-web && electron .",
+    "dist": "npm run copy-web && electron-builder --win portable --publish never"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "io.github.anandhavaradhan.studysimulations",
+    "productName": "Study Simulations",
+    "files": [
+      "main.js",
+      "app-config.json",
+      "icon.png",
+      "www/**/*"
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "icon.png"
+    },
+    "portable": {
+      "artifactName": "StudySimulations.exe"
+    },
+    "directories": {
+      "output": "dist"
+    }
+  }
+}
