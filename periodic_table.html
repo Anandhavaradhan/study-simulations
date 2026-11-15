@@ -61,10 +61,11 @@
   .table-scroll { overflow-x: auto; padding-bottom: 8px; }
   .grid {
     display: grid;
-    grid-template-columns: 46px repeat(18, 64px);
+    grid-template-columns: 46px repeat(18, minmax(48px, 1fr));
     grid-template-rows: 30px repeat(7, 78px) 18px repeat(2, 78px);
     gap: 3px;
-    width: max-content;
+    width: 100%;
+    min-width: 960px;
   }
   .rowlabel, .gnum {
     display: flex;
