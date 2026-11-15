@@ -68,8 +68,16 @@ public class MainActivity extends Activity {
         applyImmersive();
 
         // https://appassets.androidplatform.net/www/... is answered from the APK's assets/www folder
+        final WebViewAssetLoader.AssetsPathHandler files = new WebViewAssetLoader.AssetsPathHandler(this);
         final WebViewAssetLoader assets = new WebViewAssetLoader.Builder()
-                .addPathHandler("/", new WebViewAssetLoader.AssetsPathHandler(this))
+                .addPathHandler("/", new WebViewAssetLoader.PathHandler() {
+                    @Override
+                    public WebResourceResponse handle(String path) {
+                        // a folder address ("games/") shows that folder's index.html, as a web server would
+                        if (path.isEmpty() || path.endsWith("/")) path += "index.html";
+                        return files.handle(path);
+                    }
+                })
                 .build();
 
         WebSettings s = web.getSettings();

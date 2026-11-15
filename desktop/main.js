@@ -44,9 +44,11 @@ function createWindow() {
 app.whenReady().then(() => {
   protocol.handle('app', (request) => {
     const { pathname } = new URL(request.url);
-    const file = path.normalize(path.join(WWW, decodeURIComponent(pathname)));
+    // a folder address ("games/") shows that folder's index.html, as a web server would
+    const wanted = pathname.endsWith('/') ? pathname + 'index.html' : pathname;
+    const file = path.normalize(path.join(WWW, decodeURIComponent(wanted)));
     if (file !== WWW && !file.startsWith(WWW + path.sep)) return new Response('Not found', { status: 404 });
-    return net.fetch(pathToFileURL(file).toString());
+    return net.fetch(pathToFileURL(file).toString()).catch(() => new Response('Not found', { status: 404 }));
   });
   Menu.setApplicationMenu(
     Menu.buildFromTemplate([
