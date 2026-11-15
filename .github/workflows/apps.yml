@@ -38,6 +38,12 @@ jobs:
         run: |
           mkdir out
           cp android/app/build/outputs/apk/release/app-release.apk out/StudySimulations.apk
+      - name: Check the APK carries the app and is signed
+        run: |
+          unzip -l out/StudySimulations.apk | grep -q "assets/www/index.html"
+          echo "files inside assets/www: $(unzip -l out/StudySimulations.apk | grep -c 'assets/www/')"
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BT/apksigner" verify --print-certs out/StudySimulations.apk | head -3
       - uses: actions/upload-artifact@v4
         with:
           name: StudySimulations-apk
