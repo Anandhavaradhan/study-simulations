@@ -12,8 +12,8 @@ Interactive models for biology, physics and chemistry. Each one is a single HTML
 ## Get it
 
 - **Website**: https://anandhavaradhan.github.io/study-simulations/
-- **Android**: [StudySimulations.apk](https://github.com/Anandhavaradhan/study-simulations/releases/download/studysimulations-latest/StudySimulations.apk)
-- **Windows**: [StudySimulations.exe](https://github.com/Anandhavaradhan/study-simulations/releases/download/studysimulations-latest/StudySimulations.exe) (portable, no installation)
+- **Android**: [StudySimulations.apk](https://github.com/Anandhavaradhan/study-simulations/raw/downloads/StudySimulations.apk)
+- **Windows**: [StudySimulations.exe](https://github.com/Anandhavaradhan/study-simulations/raw/downloads/StudySimulations.exe) (portable, no installation)
 
 The apps carry every simulation inside them and work without the internet. They are built by
 `.github/workflows/apps.yml` from `android/` and `desktop/` on every change to `main`.
